@@ -1,0 +1,14 @@
+{
+    "name": "graal/bone",
+    "description": "php templating system",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+
+    },
+    "autoload" : {
+        "psr-4":{
+            "Graal\\Bone\\" : "src/"
+        }
+    }
+}
