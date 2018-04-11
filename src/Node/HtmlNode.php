@@ -327,6 +327,7 @@ class HtmlNode {
 	 */
 	protected function toString_attributes() {
 		$s = '';
+		if(count($this->attributes) == 0)return $s ;
 		foreach($this->attributes as $a => $v) {
 			$s .= ' '.$a;
 			if ((!$this->attribute_shorttag) || ($v !== $a)) {

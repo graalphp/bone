@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Bone</title>
+    <link rel="stylesheet" href="css/styles.css?v=1.0">
+    <!--[if lt IE 9]>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.js"></script>
+  <![endif]-->
+</head>
+
+<body>
+    <div>
+        Hello
+        <bone var="$name">
+    </div>
+
+    <bone if="$name == 'ohn'">
+        <ul>
+            <bone for="$i = 0 ; $i < 10 ; $i++">
+                <li>item n
+                    <bone var="$i">
+                </li>
+                </bone>
+        </ul>
+    </bone>
+    <bone elseif="">
+
+    </bone>
+    <bone switch="$i">
+        <bone case="1">
+
+        </bone>
+        
+    </bone>
+
+    <div id="content"></div>
+
+    <script src="js/script.js"></script>
+</body>
+
+</html>
