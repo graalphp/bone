@@ -1901,6 +1901,18 @@ class HtmlNode {
 	}
 
 	/**
+	 * Performs css query on node (alias for @see select())
+	 * @param string $query
+	 * @param int|bool $index True to return node instead of array if only 1 match,
+	 * false to return array, int to return match at index, negative int to count from end
+	 * @param bool|int $recursive
+	 * @param bool $check_self Include this node in search or only search childnodes
+	 * @return array|HtmlNode
+	 */
+	function query($query = '*', $index = false, $recursive = true, $check_self = false){
+		return $this->select($query,$index,$recursive,$check_self);
+	}
+	/**
 	 * Performs css query on node
 	 * @param string $query
 	 * @param int|bool $index True to return node instead of array if only 1 match,
