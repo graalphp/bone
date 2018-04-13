@@ -1,0 +1,28 @@
+#!/usr/local/bin/php
+<?php
+    $command = $argv[1] ;
+    switch($command){
+        case "--create-query":
+            $className = ucfirst(strtolower($argv[2]));
+            $path = "src/Engine/Skeleton/Query/$className.php" ;
+            $content = <<<EOT
+<?php declare(strict_types=1);
+namespace Graal\Bone\Engine\Skeleton\Query;
+use Graal\Bone\Engine\Skeleton\Query;
+use Graal\Bone\Node\HtmlNode;
+use Graal\Bone\Engine\Skeleton;
+
+class $className extends Query{
+                
+    function getQuery(\$tag):string{
+        
+    }
+    function resolve(HtmlNode \$node,Skeleton \$skeleton):string{
+                   
+    }
+}
+EOT;
+        file_put_contents($path,$content);
+        break;
+    }
+?>

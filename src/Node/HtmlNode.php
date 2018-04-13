@@ -1236,7 +1236,8 @@ class HtmlNode {
 			if ($case_sensitive) {
 				$t =& $this->attributes;
 			} else {
-				$t = array_change_key_case($this->attributes);
+				$t = array_change_key_case($this->attributes ? $this->attributes : []);
+				//$t = array_change_key_case($this->attributes);
 				$attr = strtolower($attr);
 			}
 
