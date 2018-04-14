@@ -34,17 +34,25 @@ class Skeleton implements SkeletonInterface {
     protected $basePath;
     protected $templateDir;
     protected $outputDir;
+    protected $outputPrefix;
+    protected $ouputSuffix;
     protected $templateFullPath;
     protected $outputFullPath;
-    protected $options = [];
+    protected $options = [
+        'DIR_SEPARATOR'             => '$',
+        'GENERATE_OUT_DATE'         => false,
+        'GENERATE_EXPIRE_OUT_DATE'  => false
+    ];
     protected $fileExts = [
         '.html',
         '.bone',
         '.bone.html',
         '.html.bone',
-        '.css'
+        '.css',
     ];
-
+    protected $exclusiveTags = [
+        'bone',
+    ];
     /**
      *
      */
@@ -57,24 +65,68 @@ class Skeleton implements SkeletonInterface {
      * @return string
      */
     public function compile(string $template): string {
+        # compile the template
 
+        # put in output file
     }
 
     /**
+     * Undocumented function
+     *
+     * @return self
+     */
+    public function start(): self {
+        \ob_start();
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @return void
+     */
+    public function end() {
+        \ob_end_flush();
+    }
+    /**
      *
      */
-    public function render(string $template, array $params = []) {
-        if (!$this->templateExists()) {
+    public function render(string $template, array $params = []): string {
+        if (!$this->templateExists($template)) {
             throw new SkeletonException("The template \"$template\" file does not exist", 1);
-
         }
+
+        /* TODO LIST */
+        # check for cached template     |
+
+        # compile the template          |
+        # put in output file            | > function compile()
+        $this->compile(Html5::createFromFile($template)->getContent());
+
+        # start render                  | > function start()
+
+        # extract params                |
+        # extract globals params        | > function extractCommon();
+        # extract functions             |
+
+        # include output file           |
+        # get content of output file    |> function getCompiledTemplateContent();
+
+        # end render                    |> function end()
+
+        # return $content ;
+
     }
 
     /**
      *
      */
     public function templateExists(string $template): boolean {
-        return \file_exists($this->getTemplateFullPath($template));
+        foreach ($this->fileExts as $ext) {
+            if (file_exists($this->getTemplateFullPath($template . $ext))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -116,7 +168,7 @@ class Skeleton implements SkeletonInterface {
 
     /**
      * Get the value of outputDir
-     * 
+     *
      * @return string
      */
     public function getOutputDir(): string {
@@ -153,18 +205,18 @@ class Skeleton implements SkeletonInterface {
      *
      * @return string
      */
-    public function getOutputFullPath(): string {
+    public function getOutputFullPath(string $template = ""): string {
         if ($this->outputFullPath == null) {
             $this->outputFullPath =
                 (($this->basePath != null) ? rtrim($this->basePath, '\/') . '/' : "") .
                 (($this->outputDir != null) ? rtrim($this->outputDir, '\/') . '/' : "");
         }
-        return $this->outputFullPath;
+        return $this->outputFullPath . $template;
     }
 
     /**
      * Get the value of options
-     * 
+     *
      * @return array
      */
     public function getOptions(): array{
@@ -184,7 +236,7 @@ class Skeleton implements SkeletonInterface {
 
     /**
      * Set the single value of options
-     * 
+     *
      * @return  self
      */
     public function setOption(string $key, $value): self {
@@ -196,11 +248,11 @@ class Skeleton implements SkeletonInterface {
     }
 
     /**
-     * 
+     *
      * @return boolean
      */
     public function isFileExtensionExists($ext): boolean {
-        return \in_array($ext,$this->fileExts);
+        return \in_array($ext, $this->fileExts);
     }
     /**
      *
@@ -229,4 +281,110 @@ class Skeleton implements SkeletonInterface {
 
         return $this;
     }
+
+    /**
+     * Undocumented function
+     *
+     * @param [type] $tag
+     * @return boolean
+     */
+    public function isExclusiveTag($tag): boolean {
+        return \in_array($tag, $this->exclusiveTags);
+    }
+    /**
+     * Get the value of exclusiveTags
+     *
+     * @return array
+     */
+    public function getExclusiveTags(): array{
+        return $this->exclusiveTags;
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @param array $exclusiveTags
+     * @return self
+     */
+    public function setExclusiveTags(array $exclusiveTags): self{
+        $this->exclusiveTags = $exclusiveTags;
+
+        return $this;
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @param string $tag
+     * @return self
+     */
+    public function addExclusiveTag(string $tag): self{
+        $this->exclusiveTags[] = $tag;
+
+        return $this;
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @param [type] $tag
+     * @return self
+     */
+    public function removeExclusiveTag($tag): self {
+        if (($key = \array_search($tag, $this->exclusiveTags)) !== FALSE) {
+            unset($this->exclusiveTags[$key]);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @return string
+     */
+    public function getOutputPrefix(): string {
+        return $this->outputPrefix;
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @param string $outputPrefix
+     * @return self
+     */
+    public function setOutputPrefix(string $outputPrefix): self{
+        $this->outputPrefix = $outputPrefix;
+
+        return $this;
+    }
+    /**
+     * Undocumented function
+     *
+     * @return string
+     */
+    public function getOuputSuffix(): string {
+        return $this->ouputSuffix;
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @param string $ouputSuffix
+     * @return self
+     */
+    public function setOuputSuffix(string $ouputSuffix): self{
+        $this->ouputSuffix = $ouputSuffix;
+
+        return $this;
+    }
+    /****************************************************************** */
+    public function generateOutputFilename(string $template): string {
+        return (
+            (($this->outputPrefix != null) ? $this->outputPrefix . '.' : "") .
+            str_replace(['/', '\\'], $this->options['DIR_SEPARATOR'], $template) .
+            (($this->ouputSuffix != null) ? '.' . $this->ouputSuffix : "") .
+            '.php');
+    }
+
 }

@@ -25,9 +25,13 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE. */
 
-namespace Graal\Bone\Engine\Skeleton;
+namespace Graal\Bone\Engine\Skeleton\Directives;
 
-interface SkeletonInterface {
-    public function compile(string $template): string;
-    public function render(string $template, array $params = []): string;
+use Graal\Bone\Engine\Skeleton;
+use Graal\Bone\Node\HtmlNode;
+
+interface DirectiveInterface {
+    public static function getAttributes(): array;
+    public static function getOptionalAttributes(): array;
+    public static function transpile(array $attributes, array $optional, HtmlNode $node, Skeleton $skeleton): string;
 }

@@ -8,6 +8,12 @@ $skeleton
     ->setBasePath(__DIR__)
     ->setTemplateDir('templates')
     ->setOutputDir('templates/out');
+    $skeleton->setOutputPrefix('compiled');
+    $skeleton->setOuputSuffix('test');
+$now = time();
+$expire = time() + 30 ;
+var_dump($now.'.'.$expire.'.'.str_replace(['/','\\'],'$',$skeleton->generateOutputFilename('partial/main')));
+
 //var_dump($skeleton->getTemplateFullPath('partial/main'));
 /*$c = Html5::class ;
 var_dump($c::createFromFile());*/
@@ -34,6 +40,17 @@ foreach ($p->query($path) as $key => $value) {
     var_dump(array_intersect_key($value->attributes,array_fill_keys($optional,"")));
 
 }
-echo $p->getContent();
+//echo $p->getContent();
+
+function buffer($buf){
+    return str_replace('hello','goodbye',$buf);
+}
+$name = 'john' ;
+ob_start();
+include ('templates/out/hello.php');
+$content = ob_get_clean();
+ob_end_flush();
+
+//echo $content ;
 
 
