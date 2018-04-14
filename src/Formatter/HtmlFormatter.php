@@ -1,5 +1,6 @@
 <?php declare(strict_types=1);
 namespace Graal\Bone\Formatter;
+use Graal\Bone\Minifier\JSMinPlus\JSMinPlus;
 
 /**
  * 
@@ -184,7 +185,7 @@ class HtmlFormatter {
 	#return true;
 	#php4e
 	#php5
-		include_once(__DIR__.'/../Minifier/jsminplus.php');
+		//include_once(__DIR__.'/../Minifier/jsminplus.php');
 
 		$errors = array();
 		foreach($root->select('script:not-empty > "~text~"', false, $recursive, true) as $c) {

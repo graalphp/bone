@@ -1413,6 +1413,17 @@ class HtmlNode {
 	function addAttribute($attr, $val) {
 		$this->setAttribute($attr, $val, 'total', true);
 	}
+	/**
+	 * Delete attributes
+	 * @param array $attrs 
+	 * @param string $compare Find node using "namespace", "name" or "total"
+	 * @param bool $case_sensitive Compare with case sensitivity
+	 */
+	function deleteAttributes($attrs, $compare = 'total', $case_sensitive = false) {
+		foreach ($attrs as $attr) {
+			$this->deleteAttribute($attr,$compare,$case_sensitive);
+		}
+	}
 
 	/**
 	 * Delete attribute(s)
