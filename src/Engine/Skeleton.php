@@ -35,13 +35,15 @@ class Skeleton implements SkeletonInterface {
     protected $templateDir;
     protected $outputDir;
     protected $outputPrefix;
-    protected $ouputSuffix;
+    protected $outputSuffix;
     protected $templateFullPath;
     protected $outputFullPath;
+    protected $expiresOutputFilename = 60 * 60;
     protected $options = [
-        'DIR_SEPARATOR'             => '$',
-        'GENERATE_OUT_DATE'         => false,
-        'GENERATE_EXPIRE_OUT_DATE'  => false
+        'DIR_SEPARATOR' => '$',
+        'OUTPUT_SEPARATOR' => '.',
+        'GENERATE_OUT_DATE' => false,
+        'GENERATE_EXPIRE_OUT_DATE' => false,
     ];
     protected $fileExts = [
         '.html',
@@ -379,12 +381,66 @@ class Skeleton implements SkeletonInterface {
         return $this;
     }
     /****************************************************************** */
-    public function generateOutputFilename(string $template): string {
+    public function generateOutputFilename(string $template): string{
+        $out_date = $this->options['GENERATE_OUT_DATE'] === true ? time() . $this->options['OUTPUT_SEPARATOR'] : "";
+        $expire_date = $this->options['GENERATE_EXPIRE_OUT_DATE'] === true ? (time() + $this->expiresOutputFilename) . $this->options['OUTPUT_SEPARATOR'] : "";
         return (
-            (($this->outputPrefix != null) ? $this->outputPrefix . '.' : "") .
+            $out_date . $expire_date .
+            (($this->outputPrefix != null) ? $this->outputPrefix . $this->options['OUTPUT_SEPARATOR'] : "") .
             str_replace(['/', '\\'], $this->options['DIR_SEPARATOR'], $template) .
-            (($this->ouputSuffix != null) ? '.' . $this->ouputSuffix : "") .
+            (($this->outputSuffix != null) ? $this->options['OUTPUT_SEPARATOR'] . $this->ouputSuffix : "") .
             '.php');
+    }
+
+    public function retrieveOutputFilename(string $filename): string{
+        $idx = 0;
+        if ($this->options['GENERATE_OUT_DATE']) {
+            $idx++;
+        }
+
+        if ($this->options['GENERATE_EXPIRE_OUT_DATE']) {
+            $idx++;
+        }
+
+        if ($this->outputPrefix !== null) {
+            $idx++;
+        }
+
+        $pattern = \explode($this->options['OUTPUT_SEPARATOR'], $filename);
+        $template = \str_replace($this->options['DIR_SEPARATOR'], '/', $pattern[$idx]);
+        return $template;
+    }
+    public function explodeOutputFilename(string $filename):array{
+        $pattern = [] ;
+        $exploded = \explode($this->options['OUTPUT_SEPARATOR'],$filename);
+        $idx = 0 ;
+        if ($this->options['GENERATE_OUT_DATE']) {
+            $pattern['date'] = $exploded[0];
+            $idx++;
+        }
+        if ($this->options['GENERATE_EXPIRE_OUT_DATE']) {
+            $pattern['expires'] = $exploded[$idx];
+            $idx++;
+        }
+        if ($this->outputPrefix !== null) {
+            $pattern['prefix'] = $exploded[$idx];
+            $idx++;
+        }
+        $pattern['template'] = \str_replace($this->options['DIR_SEPARATOR'], '/', $exploded[$idx]);
+        $idx++;
+        if ($this->outputSuffix !== null) {
+            $pattern['suffix'] = $exploded[$idx];
+        }
+        return $pattern ;
+    }
+    public function searchFromOutputFilename(string $template): string {
+        $list = \scandir($this->getOutputFullPath());
+        foreach ($list as $filename) {
+            if(($out = $this->retrieveOutputFilename($filename)) == $template){
+                return $filename;
+            }
+        }
+        return '';
     }
 
 }

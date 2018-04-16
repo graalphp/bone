@@ -8,13 +8,19 @@ $skeleton
     ->setBasePath(__DIR__)
     ->setTemplateDir('templates')
     ->setOutputDir('templates/out');
-    $skeleton->setOutputPrefix('compiled');
-    $skeleton->setOuputSuffix('test');
-$now = time();
-$expire = time() + 30 ;
-var_dump($now.'.'.$expire.'.'.str_replace(['/','\\'],'$',$skeleton->generateOutputFilename('partial/main')));
 
-//var_dump($skeleton->getTemplateFullPath('partial/main'));
+//$skeleton->setOutputPrefix('compiled');
+$skeleton->setOuputSuffix('test');
+
+$template = 'partial/common/main' ;
+$out = $skeleton->generateOutputFilename($template);
+//file_put_contents($skeleton->getOutputFullPath($out),"<div>hello world</div>");
+var_dump($out);
+$temp = $skeleton->retrieveOutputFilename($out);
+var_dump($temp);
+
+var_dump($skeleton->explodeOutputFilename($out));
+
 /*$c = Html5::class ;
 var_dump($c::createFromFile());*/
 $p = Html5::createFromFile('templates/main.html');
