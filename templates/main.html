@@ -17,14 +17,23 @@
 <body>
 
     <section class="section clearfix">
-        <ul for="$i" in="$items">
-            <li>test {{ $i->name }}</li>
+        
+        
+        <include view="main" />
+        <extends view="layout">
+            <block super=""></block>
+            <block name="title"></block>
+        </extends>
+
+
+        <ul class="ul" for="user" in="users">
+            <li>{{ f.parse(user.name) }}</li>
         </ul>
-        <div class="ops" id="a" style=""></div>
+        <div class="ops" id="a" style="color:red;"></div>
         <div class="container" id="b" test="other" data="data">
             <div class="row">
                 <div class="col-lg-6">
-                    <bone block="content"></bone>
+                    <bone block="content">{{ 'test' }}</bone>
                 </div>
             </div>
         </div>

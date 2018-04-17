@@ -31,6 +31,7 @@ use Graal\Bone\Engine\SKeleton\SkeletonInterface;
 
 class Skeleton implements SkeletonInterface {
 
+    protected $regexVar = '/{{\s*(.*?)\s*}}/';
     protected $basePath;
     protected $templateDir;
     protected $outputDir;
@@ -39,11 +40,16 @@ class Skeleton implements SkeletonInterface {
     protected $templateFullPath;
     protected $outputFullPath;
     protected $expiresOutputFilename = 60 * 60;
+    protected $directives = [
+
+    ];
     protected $options = [
         'DIR_SEPARATOR' => '$',
         'OUTPUT_SEPARATOR' => '.',
-        'GENERATE_OUT_DATE' => false,
-        'GENERATE_EXPIRE_OUT_DATE' => false,
+        'GENERATE_OUT_DATE' => true,
+        'GENERATE_EXPIRE_OUT_DATE' => true,
+        'CACHE_ENABLED' => false,
+        'VAR_STYLE_PHP' => false,
     ];
     protected $fileExts = [
         '.html',
@@ -70,6 +76,21 @@ class Skeleton implements SkeletonInterface {
         # compile the template
 
         # put in output file
+    }
+    /**
+     * Undocumented function
+     *
+     * @param string $template
+     * @return string
+     */
+    public function transpileVar(string $template): string {
+        if (\preg_match_all($this->regexVar, $template, $matches) !== FALSE) {
+            foreach ($matches[1] as $key => $value) {
+
+            }
+            $template = \str_replace($matches[0], \array_map(array($this, 'outVar'), $matches[1]), $template);
+        }
+        return $template;
     }
 
     /**
@@ -122,7 +143,7 @@ class Skeleton implements SkeletonInterface {
     /**
      *
      */
-    public function templateExists(string $template): boolean {
+    public function templateExists(string $template): bool {
         foreach ($this->fileExts as $ext) {
             if (file_exists($this->getTemplateFullPath($template . $ext))) {
                 return true;
@@ -251,9 +272,9 @@ class Skeleton implements SkeletonInterface {
 
     /**
      *
-     * @return boolean
+     * @return bool
      */
-    public function isFileExtensionExists($ext): boolean {
+    public function isFileExtensionExists($ext): bool {
         return \in_array($ext, $this->fileExts);
     }
     /**
@@ -288,9 +309,9 @@ class Skeleton implements SkeletonInterface {
      * Undocumented function
      *
      * @param [type] $tag
-     * @return boolean
+     * @return bool
      */
-    public function isExclusiveTag($tag): boolean {
+    public function isExclusiveTag($tag): bool {
         return \in_array($tag, $this->exclusiveTags);
     }
     /**
@@ -365,8 +386,8 @@ class Skeleton implements SkeletonInterface {
      *
      * @return string
      */
-    public function getOuputSuffix(): string {
-        return $this->ouputSuffix;
+    public function getOutputSuffix(): string {
+        return $this->outputSuffix;
     }
 
     /**
@@ -375,10 +396,46 @@ class Skeleton implements SkeletonInterface {
      * @param string $ouputSuffix
      * @return self
      */
-    public function setOuputSuffix(string $ouputSuffix): self{
-        $this->ouputSuffix = $ouputSuffix;
+    public function setOutputSuffix(string $outputSuffix): self{
+        $this->outputSuffix = $outputSuffix;
 
         return $this;
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @param boolean $enable
+     * @return void
+     */
+    public function enableCache(bool $enable) {
+        $this->options['CACHE_ENABLED'] = $enable;
+        $this->options['GENERATE_EXPIRE_OUT_DATE'] |= $enable;
+
+    }
+
+    public function castVar(string $var): string {
+        return ($this->options['VAR_STYLE_PHP'] || 
+                \is_numeric($var) || 
+                \substr($var,0,1) == "'" ||  
+                \substr($var,0,1) == '"' ||
+                empty($var) ? $var : \str_replace('.', '->', "$$var"));
+    }
+
+    public function outVar(string $var): string {
+        if(\preg_match_all('/\((.*?),*\)/',$var,$matches) !== FALSE){
+            var_dump($matches);
+            if(!empty($matches[1])){
+                $vv = \array_map(function($v){
+                    return \array_map(array($this,'castVar'),$v);
+                },\array_map(function($v){
+                    return \array_map('trim',\explode(',',$v));
+                },$matches[1])) ;
+                var_dump($vv);
+                $var = str_replace($matches[1],implode(",",$vv[0]),$var);
+            }
+        }
+        return "<?php echo " . $this->castVar($var) . " ;?>" ;
     }
     /****************************************************************** */
     public function generateOutputFilename(string $template): string{
@@ -388,7 +445,7 @@ class Skeleton implements SkeletonInterface {
             $out_date . $expire_date .
             (($this->outputPrefix != null) ? $this->outputPrefix . $this->options['OUTPUT_SEPARATOR'] : "") .
             str_replace(['/', '\\'], $this->options['DIR_SEPARATOR'], $template) .
-            (($this->outputSuffix != null) ? $this->options['OUTPUT_SEPARATOR'] . $this->ouputSuffix : "") .
+            (($this->outputSuffix != null) ? $this->options['OUTPUT_SEPARATOR'] . $this->outputSuffix : "") .
             '.php');
     }
 
@@ -410,16 +467,16 @@ class Skeleton implements SkeletonInterface {
         $template = \str_replace($this->options['DIR_SEPARATOR'], '/', $pattern[$idx]);
         return $template;
     }
-    public function explodeOutputFilename(string $filename):array{
-        $pattern = [] ;
-        $exploded = \explode($this->options['OUTPUT_SEPARATOR'],$filename);
-        $idx = 0 ;
+    public function explodeOutputFilename(string $filename): array{
+        $pattern = [];
+        $exploded = \explode($this->options['OUTPUT_SEPARATOR'], $filename);
+        $idx = 0;
         if ($this->options['GENERATE_OUT_DATE']) {
-            $pattern['date'] = $exploded[0];
+            $pattern['date'] = \intval($exploded[0]);
             $idx++;
         }
         if ($this->options['GENERATE_EXPIRE_OUT_DATE']) {
-            $pattern['expires'] = $exploded[$idx];
+            $pattern['expires'] = \intval($exploded[$idx]);
             $idx++;
         }
         if ($this->outputPrefix !== null) {
@@ -431,12 +488,12 @@ class Skeleton implements SkeletonInterface {
         if ($this->outputSuffix !== null) {
             $pattern['suffix'] = $exploded[$idx];
         }
-        return $pattern ;
+        return $pattern;
     }
-    public function searchFromOutputFilename(string $template): string {
+    public function searchFromOutputFilename(string $template): string{
         $list = \scandir($this->getOutputFullPath());
         foreach ($list as $filename) {
-            if(($out = $this->retrieveOutputFilename($filename)) == $template){
+            if (($out = $this->retrieveOutputFilename($filename)) == $template) {
                 return $filename;
             }
         }

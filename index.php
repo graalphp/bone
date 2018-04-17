@@ -9,8 +9,8 @@ $skeleton
     ->setTemplateDir('templates')
     ->setOutputDir('templates/out');
 
-//$skeleton->setOutputPrefix('compiled');
-$skeleton->setOuputSuffix('test');
+$skeleton->setOutputPrefix('compiled');
+$skeleton->setOutputSuffix('test');
 
 $template = 'partial/common/main' ;
 $out = $skeleton->generateOutputFilename($template);
@@ -21,9 +21,13 @@ var_dump($temp);
 
 var_dump($skeleton->explodeOutputFilename($out));
 
+//var_dump($skeleton->castVar('Object::test'));
 /*$c = Html5::class ;
 var_dump($c::createFromFile());*/
 $p = Html5::createFromFile('templates/main.html');
+$t = $skeleton->transpileVar("$p");
+echo $t;
+
 $mandatory = ['for'];
 $optional = ['in'] ;
 $mandatory_path = implode("+",$mandatory);
