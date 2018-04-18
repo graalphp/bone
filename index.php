@@ -11,23 +11,17 @@ $skeleton
 
 $skeleton->setOutputPrefix('compiled');
 $skeleton->setOutputSuffix('test');
-
-$template = 'partial/common/main' ;
+$content = $skeleton->render("main",["date" => date("d M Y")]);
+echo $content ;
+/*$template = 'partial/common/main' ;
 $out = $skeleton->generateOutputFilename($template);
-//file_put_contents($skeleton->getOutputFullPath($out),"<div>hello world</div>");
 var_dump($out);
 $temp = $skeleton->retrieveOutputFilename($out);
 var_dump($temp);
-
 var_dump($skeleton->explodeOutputFilename($out));
-
-//var_dump($skeleton->castVar('Object::test'));
-/*$c = Html5::class ;
-var_dump($c::createFromFile());*/
 $p = Html5::createFromFile('templates/main.html');
 $t = $skeleton->transpileVar("$p");
 echo $t;
-
 $mandatory = ['for'];
 $optional = ['in'] ;
 $mandatory_path = implode("+",$mandatory);
@@ -36,7 +30,6 @@ $optional_path = empty($optional) ? "" : "+$mandatory_path,".implode(",",$option
 var_dump($optional_path);
 $path = "*[$mandatory_path$optional_path]" ;
 var_dump($path);
-
 foreach ($p->query($path) as $key => $value) {
     var_dump("found ".$value->getTag());
     var_dump('MANDATORY');
@@ -50,8 +43,6 @@ foreach ($p->query($path) as $key => $value) {
     var_dump(array_intersect_key($value->attributes,array_fill_keys($optional,"")));
 
 }
-//echo $p->getContent();
-
 function buffer($buf){
     return str_replace('hello','goodbye',$buf);
 }
@@ -59,8 +50,8 @@ $name = 'john' ;
 ob_start();
 include ('templates/out/hello.php');
 $content = ob_get_clean();
-ob_end_flush();
+ob_end_flush();*/
 
-//echo $content ;
+
 
 

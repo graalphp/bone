@@ -30,7 +30,8 @@ use Graal\Bone\Node\HtmlNode;
 use Graal\Bone\Engine\Skeleton\SkeletonInterface;
 
 interface DirectiveInterface {
-    
+    public static function deleteAttributes();
+    public static function deleteOptionalAttributes();
     public static function getAttributes(): array;
     public static function getOptionalAttributes(): array;
     public static function transpile(array $attributes, array $optional, HtmlNode $node, SkeletonInterface $skeleton):string;

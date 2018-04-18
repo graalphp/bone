@@ -24,12 +24,22 @@ HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
 WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE. */
-
 namespace Graal\Bone\Engine\Skeleton;
 
-use Graal\Bone\Parser\Html5;
+use Graal\Bone\Node\HtmlNode;
+use Graal\Bone\Engine\Skeleton\SkeletonInterface;
+use Graal\Bone\Engine\Skeleton\Directive\DirectiveInterface;
 
-interface SkeletonInterface {
-    public function compile(Html5 $parser): string;
-    public function render(string $template, array $params = []): string;
+abstract class Directive implements DirectiveInterface{
+    public static function deleteAttributes(){
+        return true ;
+    }
+    public static function deleteOptionalAttributes(){
+        return true ;
+    }
+    public static function getOptionalAttributes(): array{
+        return [];
+    }
+    public abstract static function getAttributes():array;
+    public abstract static function transpile(array $attributes, array $optional, HtmlNode $node, SkeletonInterface $skeleton):string;
 }

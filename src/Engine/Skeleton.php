@@ -26,8 +26,10 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE. */
 
 namespace Graal\Bone\Engine;
+use Graal\Bone\Parser\Html5;
 use Graal\Bone\Engine\Skeleton\SkeletonException;
 use Graal\Bone\Engine\SKeleton\SkeletonInterface;
+use Graal\Bone\Engine\Skeleton\Directive\ForDirective;
 
 class Skeleton implements SkeletonInterface {
 
@@ -41,13 +43,13 @@ class Skeleton implements SkeletonInterface {
     protected $outputFullPath;
     protected $expiresOutputFilename = 60 * 60;
     protected $directives = [
-
+        ForDirective::class
     ];
     protected $options = [
         'DIR_SEPARATOR' => '$',
         'OUTPUT_SEPARATOR' => '.',
-        'GENERATE_OUT_DATE' => true,
-        'GENERATE_EXPIRE_OUT_DATE' => true,
+        'GENERATE_OUT_DATE' => false,
+        'GENERATE_EXPIRE_OUT_DATE' => false,
         'CACHE_ENABLED' => false,
         'VAR_STYLE_PHP' => false,
     ];
@@ -72,10 +74,46 @@ class Skeleton implements SkeletonInterface {
      *
      * @return string
      */
-    public function compile(string $template): string {
+    public function compile(Html5 $parser): string {
         # compile the template
+        foreach ($this->directives as $directive) {
 
-        # put in output file
+            $mandatory = $directive::getAttributes();
+            $optional = $directive::getOptionalAttributes();
+            $mandatory_path = implode("+", $mandatory);
+            $optional_path = empty($optional) ? "" : "+$mandatory_path," . implode(",", $optional);
+            $path = "*[$mandatory_path$optional_path]";
+
+            foreach ($parser->query($path) as $node) {
+
+                $attrs = array_intersect_key($node->attributes,array_fill_keys($mandatory,""));
+                $op = array_intersect_key($node->attributes,array_fill_keys($optional,""));
+                $traspiled = $directive::transpile($attrs,$op,$node,$this);
+
+                if(\in_array($node->getTag(),$this->exclusiveTags)){
+                    $node->setOuterText($traspiled);
+                }else{
+
+                    if($directive::deleteAttributes() !== false){
+                        $da = \is_array($directive::deleteAttributes()) ? $directive::deleteAttributes() : $mandatory ;
+                        foreach ($da as $attr) {
+                            $node->deleteAttribute($attr);
+                        }
+                    }
+
+                    if($directive::deleteOptionalAttributes() !== false){
+                        $oa = \is_array($directive::deleteOptionalAttributes()) ? $directive::deleteOptionalAttributes() : $optional ;
+                        foreach ($oa as $attr) {
+                            $node->deleteAttribute($attr);
+                        }
+                    }
+
+                    $node->setInnerText($traspiled);
+                }
+            }
+        }
+        # return the content
+        return $this->transpileVar($parser->getContent());
     }
     /**
      * Undocumented function
@@ -85,9 +123,6 @@ class Skeleton implements SkeletonInterface {
      */
     public function transpileVar(string $template): string {
         if (\preg_match_all($this->regexVar, $template, $matches) !== FALSE) {
-            foreach ($matches[1] as $key => $value) {
-
-            }
             $template = \str_replace($matches[0], \array_map(array($this, 'outVar'), $matches[1]), $template);
         }
         return $template;
@@ -96,9 +131,9 @@ class Skeleton implements SkeletonInterface {
     /**
      * Undocumented function
      *
-     * @return self
+     * @return void
      */
-    public function start(): self {
+    public function start(){
         \ob_start();
     }
 
@@ -114,39 +149,46 @@ class Skeleton implements SkeletonInterface {
      *
      */
     public function render(string $template, array $params = []): string {
-        if (!$this->templateExists($template)) {
+        if (($filename = $this->templateExists($template)) === false) {
             throw new SkeletonException("The template \"$template\" file does not exist", 1);
         }
 
         /* TODO LIST */
         # check for cached template     |
-
+        # OR
         # compile the template          |
         # put in output file            | > function compile()
-        $this->compile(Html5::createFromFile($template)->getContent());
-
+        $content = $this->compile(Html5::createFromFile($this->getTemplateFullPath($filename)));
+        $outputPath = $this->getOutputFullPath($this->generateOutputFilename($template));
+        if (\file_put_contents($outputPath, $content) === FALSE) {
+            throw new SkeletonException("Error on generating template", 1);
+        };
         # start render                  | > function start()
-
+        $this->start();
         # extract params                |
         # extract globals params        | > function extractCommon();
         # extract functions             |
-
+        if (!empty($params)) {
+            \extract($params);
+        }
         # include output file           |
         # get content of output file    |> function getCompiledTemplateContent();
-
+        include $outputPath;
+        $content = \ob_get_clean();
         # end render                    |> function end()
-
+        $this->end();
         # return $content ;
+        return $content;
 
     }
 
     /**
      *
      */
-    public function templateExists(string $template): bool {
+    public function templateExists(string $template) {
         foreach ($this->fileExts as $ext) {
             if (file_exists($this->getTemplateFullPath($template . $ext))) {
-                return true;
+                return ($template . $ext);
             }
         }
         return false;
@@ -411,31 +453,48 @@ class Skeleton implements SkeletonInterface {
     public function enableCache(bool $enable) {
         $this->options['CACHE_ENABLED'] = $enable;
         $this->options['GENERATE_EXPIRE_OUT_DATE'] |= $enable;
-
     }
-
+    /**
+     * Undocumented function
+     *
+     * @param string $exp
+     * @return string
+     */
+    public function castExp(string $exp) : string  {
+       if(!$this->options['VAR_STYLE_PHP']){
+           if(\preg_match_all('/\s*([^=+\-*\/%<>;0-9\s]+)\s*/',$exp,$matches) !== FALSE){
+               return \str_replace($matches[0],\array_map(array($this,'castVar'),$matches[1]),$exp);
+           }
+       }
+       return $exp ;
+    }
+    
+    /**
+     * Undocumented function
+     *
+     * @param string $var
+     * @return string
+     */
     public function castVar(string $var): string {
-        return ($this->options['VAR_STYLE_PHP'] || 
-                \is_numeric($var) || 
-                \substr($var,0,1) == "'" ||  
-                \substr($var,0,1) == '"' ||
-                empty($var) ? $var : \str_replace('.', '->', "$$var"));
+        return ($this->options['VAR_STYLE_PHP'] ||
+            \is_numeric($var) ||
+            \substr($var, 0, 1) == "'" ||
+            \substr($var, 0, 1) == '"' ||
+            empty($var) ? $var : \str_replace('.', '->', "$$var"));
     }
 
     public function outVar(string $var): string {
-        if(\preg_match_all('/\((.*?),*\)/',$var,$matches) !== FALSE){
-            var_dump($matches);
-            if(!empty($matches[1])){
-                $vv = \array_map(function($v){
-                    return \array_map(array($this,'castVar'),$v);
-                },\array_map(function($v){
-                    return \array_map('trim',\explode(',',$v));
-                },$matches[1])) ;
-                var_dump($vv);
-                $var = str_replace($matches[1],implode(",",$vv[0]),$var);
+        if (\preg_match_all('/\((.*?),*\)/', $var, $matches) !== FALSE) {
+            if (!empty($matches[1])) {
+                $vv = \array_map(function ($v) {
+                    return \array_map(array($this, 'castVar'), $v);
+                }, \array_map(function ($v) {
+                    return \array_map('trim', \explode(',', $v));
+                }, $matches[1]));
+                $var = str_replace($matches[1], implode(",", $vv[0]), $var);
             }
         }
-        return "<?php echo " . $this->castVar($var) . " ;?>" ;
+        return (empty($var) ? "" : "<?php echo " . $this->castVar($var) . " ;?>");
     }
     /****************************************************************** */
     public function generateOutputFilename(string $template): string{

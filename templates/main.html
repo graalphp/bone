@@ -25,15 +25,21 @@
             <block name="title"></block>
         </extends>
 
+        <ul for="i" in="items"></ul>
 
-        <ul class="ul" for="user" in="users">
-            <li>{{ f.parse(user.name) }}</li>
+        <ul for="items" as="key,value"></ul>
+        <ul for="items" as="value"></ul>
+
+        <ul for="( i = 0 ; i < 10 ; i++)"></ul>
+
+        <ul class="ul" for="( i = 0 ; i < users.length ; i++)">
+            <li call="dateFilter" on="date" params='["d/m/y"]'>Today is {{ date }}</li>
         </ul>
         <div class="ops" id="a" style="color:red;"></div>
         <div class="container" id="b" test="other" data="data">
             <div class="row">
                 <div class="col-lg-6">
-                    <bone block="content">{{ 'test' }}</bone>
+                    <bone block="content"></bone>
                 </div>
             </div>
         </div>

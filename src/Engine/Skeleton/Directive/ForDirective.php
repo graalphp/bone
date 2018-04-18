@@ -1,11 +1,3 @@
-#!/usr/local/bin/php
-<?php
-    $command = $argv[1] ;
-    switch($command){
-        case "--create-directive":
-            $className = ucfirst($argv[2]);
-            $path = "src/Engine/Skeleton/Directive/$className.php" ;
-            $content = <<<EOT
 <?php declare(strict_types=1);
 /*! Copyright (c) 2018 GraalPHP
 https://github.com/graalphp
@@ -38,7 +30,7 @@ use Graal\Bone\Engine\Skeleton\Directive;
 use Graal\Bone\Node\HtmlNode;
 use Graal\Bone\Engine\Skeleton\SkeletonInterface;
 
-class $className extends Directive{
+class ForDirective extends Directive{
 
     /*public static function deleteAttributes(){
         return true ;
@@ -48,21 +40,38 @@ class $className extends Directive{
         return true ;
     }*/
 
-    /*public static function getOptionalAttributes(): array{
-        return [];
-    }*/
+    public static function getOptionalAttributes(): array{
+        return array(
+            "in",
+            "as"
+        );
+    }
 
     public static function getAttributes():array{
         return array(
-            # attrs...
+            "for"
         );
     }
-    public static function transpile(array \$attributes, array \$optional, HtmlNode \$node,SkeletonInterface \$skeleton):string{
-        # code...           
+    public static function transpile(array $attributes, array $optional, HtmlNode $node,SkeletonInterface $skeleton):string{
+        $regex = '/\(\s*(.*?)\s*;\s*(.*?)\s*;\s*(.*?)\s*\)/';
+        if(isset($optional['in']) || isset($optional['as'])){
+            $part1 = $skeleton->castVar($attributes['for']);
+            if(isset($optional['as'])){
+                $part2 = \implode(" => ",\array_map(array($skeleton,'castVar'),\explode(',',$optional['as'])));
+            }else{
+                $part2 = $part1 ;
+                $part1 = $skeleton->castVar($optional['in']);
+            }
+            $statement = \sprintf("foreach(%s as %s);",$part1,$part2);
+            \var_dump($statement);
+        }else{
+            \preg_match_all($regex,$attributes['for'],$matches);
+            for($i=1;$i<4;$i++){
+                $attributes['for'] = (\str_replace($matches[$i],\array_map(array($skeleton,'castExp'),$matches[$i]),$attributes['for']));
+            }
+            $statement = "for".$attributes['for'];
+            \var_dump($statement);
+        }
+        return "" ;
     }
 }
-EOT;
-        file_put_contents($path,$content);
-        break;
-    }
-?>
