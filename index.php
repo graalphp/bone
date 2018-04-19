@@ -11,7 +11,7 @@ $skeleton
 
 $skeleton->setOutputPrefix('compiled');
 $skeleton->setOutputSuffix('test');
-$content = $skeleton->render("main",["date" => date("d M Y")]);
+$content = $skeleton->render("main",['md5'=>'md5','email' => 'test@email.com']);
 echo $content ;
 /*$template = 'partial/common/main' ;
 $out = $skeleton->generateOutputFilename($template);

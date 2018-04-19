@@ -33,7 +33,8 @@ use Graal\Bone\Engine\Skeleton\Directive\ForDirective;
 
 class Skeleton implements SkeletonInterface {
 
-    protected $regexVar = '/{{\s*(.*?)\s*}}/';
+    protected $escapeVarSymbol = "#" ;
+    protected $regexVar = '/#?{{\s*(.*?)\s*}}/';
     protected $basePath;
     protected $templateDir;
     protected $outputDir;
@@ -42,6 +43,12 @@ class Skeleton implements SkeletonInterface {
     protected $templateFullPath;
     protected $outputFullPath;
     protected $expiresOutputFilename = 60 * 60;
+    protected $globals = [
+
+    ];
+    protected $functions = [
+
+    ];
     protected $directives = [
         ForDirective::class
     ];
@@ -123,9 +130,19 @@ class Skeleton implements SkeletonInterface {
      */
     public function transpileVar(string $template): string {
         if (\preg_match_all($this->regexVar, $template, $matches) !== FALSE) {
+            $this->escapeVar($matches);
             $template = \str_replace($matches[0], \array_map(array($this, 'outVar'), $matches[1]), $template);
         }
         return $template;
+    }
+
+    public function escapeVar(array &$matches):array{
+        foreach($matches[0] as $key => $value){
+            if(\substr($value,0,1) == $this->escapeVarSymbol){
+                $matches[1][$key] = "'".\addslashes(\substr($value,1))."'";
+            }
+        }
+        return $matches ;
     }
 
     /**
@@ -166,11 +183,12 @@ class Skeleton implements SkeletonInterface {
         # start render                  | > function start()
         $this->start();
         # extract params                |
-        # extract globals params        | > function extractCommon();
-        # extract functions             |
         if (!empty($params)) {
             \extract($params);
         }
+        # extract globals params        | > function extractCommon();
+        # extract functions             |
+        
         # include output file           |
         # get content of output file    |> function getCompiledTemplateContent();
         include $outputPath;
@@ -484,7 +502,10 @@ class Skeleton implements SkeletonInterface {
     }
 
     public function outVar(string $var): string {
-        if (\preg_match_all('/\((.*?),*\)/', $var, $matches) !== FALSE) {
+        //'/[\(\[](.*?),*[\)\]]/'
+        //'/\((.*?),*\)/'
+
+        if (\substr($var,0,1) != "'" && \substr($var,0,1) != '"' && \preg_match_all('/[\(\[](.*?),*[\)\]]/', $var, $matches) !== FALSE) {
             if (!empty($matches[1])) {
                 $vv = \array_map(function ($v) {
                     return \array_map(array($this, 'castVar'), $v);

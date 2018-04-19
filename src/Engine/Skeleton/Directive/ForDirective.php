@@ -54,6 +54,7 @@ class ForDirective extends Directive{
     }
     public static function transpile(array $attributes, array $optional, HtmlNode $node,SkeletonInterface $skeleton):string{
         $regex = '/\(\s*(.*?)\s*;\s*(.*?)\s*;\s*(.*?)\s*\)/';
+        $content = $node->getInnerText() ;
         if(isset($optional['in']) || isset($optional['as'])){
             $part1 = $skeleton->castVar($attributes['for']);
             if(isset($optional['as'])){
@@ -62,16 +63,17 @@ class ForDirective extends Directive{
                 $part2 = $part1 ;
                 $part1 = $skeleton->castVar($optional['in']);
             }
-            $statement = \sprintf("foreach(%s as %s);",$part1,$part2);
-            \var_dump($statement);
+            $statement = \sprintf("foreach(%s as %s)",$part1,$part2);
+            //\var_dump($statement);
         }else{
             \preg_match_all($regex,$attributes['for'],$matches);
             for($i=1;$i<4;$i++){
                 $attributes['for'] = (\str_replace($matches[$i],\array_map(array($skeleton,'castExp'),$matches[$i]),$attributes['for']));
             }
             $statement = "for".$attributes['for'];
-            \var_dump($statement);
+            //\var_dump($statement);
         }
-        return "" ;
+        $code = "<?php $statement { ?> $content <?php } ?>";
+        return  $code ;
     }
 }
