@@ -107,11 +107,12 @@
     <li> <?php echo '{{ items[i].name }}' ;?> </li> 
 </ul> 
 --></code></pre>
-            or also like the php foreach =>
+            or also like the php foreach  key => value
             <pre><code class="language-markup"><!--<ul for="items" as="key,value"> 
     <li> <?php echo '{{ items[key].name }}' ;?> </li> 
 </ul> 
 --></code></pre>
+
         </div>
     </main>
     <!-- /.container -->

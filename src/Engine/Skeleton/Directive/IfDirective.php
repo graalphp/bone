@@ -1,15 +1,3 @@
-#!/usr/local/bin/php
-<?php
-    $command = $argv[1] ;
-    switch($command){
-        case "--create-directive":
-            $className = ucfirst($argv[2]);
-            if(empty($className)){
-                print "Empty class name" ;
-                return 1 ;
-            }
-            $path = "src/Engine/Skeleton/Directive/$className.php" ;
-            $content = <<<EOT
 <?php declare(strict_types=1);
 /*! Copyright (c) 2018 GraalPHP
 https://github.com/graalphp
@@ -42,7 +30,7 @@ use Graal\Bone\Engine\Skeleton\Directive;
 use Graal\Bone\Node\HtmlNode;
 use Graal\Bone\Engine\Skeleton\SkeletonInterface;
 
-class $className extends Directive{
+class IfDirective extends Directive{
 
     /*public static function deleteAttributes(){
         return true ;
@@ -58,16 +46,10 @@ class $className extends Directive{
 
     public static function getAttributes():array{
         return array(
-            # attrs...
+            "if"
         );
     }
-    public static function transpile(array \$attributes, array \$optional, HtmlNode \$node,SkeletonInterface \$skeleton):string{
-        # code...           
+    public static function transpile(array $attributes, array $optional, HtmlNode $node,SkeletonInterface $skeleton):string{
+                   
     }
 }
-EOT;
-        file_put_contents($path,$content);
-        break;
-    }
-    return 0 ;
-?>

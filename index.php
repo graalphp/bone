@@ -13,6 +13,9 @@ $skeleton->setOutputPrefix('compiled');
 $skeleton->setOutputSuffix('test');
 $content = $skeleton->render("main",['md5'=>'md5','email' => 'test@email.com']);
 echo $content ;
+
+//$c = $skeleton->cast("ciao");
+//var_dump($c);
 /*$template = 'partial/common/main' ;
 $out = $skeleton->generateOutputFilename($template);
 var_dump($out);

@@ -26,14 +26,14 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE. */
 
 namespace Graal\Bone\Engine;
-use Graal\Bone\Parser\Html5;
+use Graal\Bone\Engine\Skeleton\Directive\ForDirective;
 use Graal\Bone\Engine\Skeleton\SkeletonException;
 use Graal\Bone\Engine\SKeleton\SkeletonInterface;
-use Graal\Bone\Engine\Skeleton\Directive\ForDirective;
+use Graal\Bone\Parser\Html5;
 
 class Skeleton implements SkeletonInterface {
 
-    protected $escapeVarSymbol = "#" ;
+    protected $escapeVarSymbol = "#";
     protected $regexVar = '/#?{{\s*(.*?)\s*}}/';
     protected $basePath;
     protected $templateDir;
@@ -50,7 +50,7 @@ class Skeleton implements SkeletonInterface {
 
     ];
     protected $directives = [
-        ForDirective::class
+        ForDirective::class,
     ];
     protected $options = [
         'DIR_SEPARATOR' => '$',
@@ -93,23 +93,23 @@ class Skeleton implements SkeletonInterface {
 
             foreach ($parser->query($path) as $node) {
 
-                $attrs = array_intersect_key($node->attributes,array_fill_keys($mandatory,""));
-                $op = array_intersect_key($node->attributes,array_fill_keys($optional,""));
-                $traspiled = $directive::transpile($attrs,$op,$node,$this);
+                $attrs = array_intersect_key($node->attributes, array_fill_keys($mandatory, ""));
+                $op = array_intersect_key($node->attributes, array_fill_keys($optional, ""));
+                $traspiled = $directive::transpile($attrs, $op, $node, $this);
 
-                if(\in_array($node->getTag(),$this->exclusiveTags)){
+                if (\in_array($node->getTag(), $this->exclusiveTags)) {
                     $node->setOuterText($traspiled);
-                }else{
+                } else {
 
-                    if($directive::deleteAttributes() !== false){
-                        $da = \is_array($directive::deleteAttributes()) ? $directive::deleteAttributes() : $mandatory ;
+                    if ($directive::deleteAttributes() !== false) {
+                        $da = \is_array($directive::deleteAttributes()) ? $directive::deleteAttributes() : $mandatory;
                         foreach ($da as $attr) {
                             $node->deleteAttribute($attr);
                         }
                     }
 
-                    if($directive::deleteOptionalAttributes() !== false){
-                        $oa = \is_array($directive::deleteOptionalAttributes()) ? $directive::deleteOptionalAttributes() : $optional ;
+                    if ($directive::deleteOptionalAttributes() !== false) {
+                        $oa = \is_array($directive::deleteOptionalAttributes()) ? $directive::deleteOptionalAttributes() : $optional;
                         foreach ($oa as $attr) {
                             $node->deleteAttribute($attr);
                         }
@@ -136,13 +136,13 @@ class Skeleton implements SkeletonInterface {
         return $template;
     }
 
-    public function escapeVar(array &$matches):array{
-        foreach($matches[0] as $key => $value){
-            if(\substr($value,0,1) == $this->escapeVarSymbol){
-                $matches[1][$key] = "'".\addslashes(\substr($value,1))."'";
+    public function escapeVar(array &$matches): array{
+        foreach ($matches[0] as $key => $value) {
+            if (\substr($value, 0, 1) == $this->escapeVarSymbol) {
+                $matches[1][$key] = "'" . \addslashes(\substr($value, 1)) . "'";
             }
         }
-        return $matches ;
+        return $matches;
     }
 
     /**
@@ -150,7 +150,7 @@ class Skeleton implements SkeletonInterface {
      *
      * @return void
      */
-    public function start(){
+    public function start() {
         \ob_start();
     }
 
@@ -188,7 +188,7 @@ class Skeleton implements SkeletonInterface {
         }
         # extract globals params        | > function extractCommon();
         # extract functions             |
-        
+
         # include output file           |
         # get content of output file    |> function getCompiledTemplateContent();
         include $outputPath;
@@ -478,15 +478,58 @@ class Skeleton implements SkeletonInterface {
      * @param string $exp
      * @return string
      */
-    public function castExp(string $exp) : string  {
-       if(!$this->options['VAR_STYLE_PHP']){
-           if(\preg_match_all('/\s*([^=+\-*\/%<>;0-9\s]+)\s*/',$exp,$matches) !== FALSE){
-               return \str_replace($matches[0],\array_map(array($this,'castVar'),$matches[1]),$exp);
-           }
-       }
-       return $exp ;
+    //@deprecated version
+    public function castExp(string $exp): string {
+        if (!$this->options['VAR_STYLE_PHP']) {
+            if (\preg_match_all('/\s*([^=+\-\*\/%<>;0-9\s]+)\s*/', $exp, $matches) !== FALSE) {
+                return \str_replace($matches[0], \array_map(array($this, 'castVar'), $matches[1]), $exp);
+            }
+        }
+        return $exp;
     }
-    
+    /**
+     * Undocumented function
+     *
+     * @param string $var
+     * @return string
+     */
+    public function cast(string $var): string {
+        if (!$this->isVarToCast($var)) {
+            return $var;
+        }
+        if (\preg_match_all('/(\w+(\.*\w*)*)([\(\[](.*?),*[\)\]])*/', $var, $matches) !== FALSE) {
+            $casting = array_map(array($this, 'castVar'), $matches[1]);
+            $vv = \array_map(function ($v) {
+                return \array_map(array($this, 'castVar'), $v);
+            }, \array_map(function ($v) {
+                return \array_map('trim', \explode(',', $v));
+            }, $matches[4]));
+            $var = \str_replace($matches[1], $casting, str_replace($matches[4], array_map(function ($v) {
+                return implode(",", $v);
+            }, $vv), $var));
+        }
+        var_dump($var);
+        return $var;
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @param string $var
+     * @return boolean
+     */
+    public function isVarToCast(string $var): bool {
+        return (
+            !$this->options['VAR_STYLE_PHP'] &&
+            !\is_numeric($var) &&
+            !\substr($var, 0, 1) == "'" &&
+            !\substr($var, 0, 1) == '"' &&
+            !\substr($var, 0, 1) == '$' &&
+            !\strtolower($var) == 'true' &&
+            !\strtolower($var) == 'false' &&
+            !empty($var)
+        );
+    }
     /**
      * Undocumented function
      *
@@ -494,18 +537,20 @@ class Skeleton implements SkeletonInterface {
      * @return string
      */
     public function castVar(string $var): string {
-        return ($this->options['VAR_STYLE_PHP'] ||
-            \is_numeric($var) ||
-            \substr($var, 0, 1) == "'" ||
-            \substr($var, 0, 1) == '"' ||
-            empty($var) ? $var : \str_replace('.', '->', "$$var"));
+        return ($this->isVarToCast($var) ? \str_replace('.', '->', "$$var") : $var);
     }
 
+    /**
+     * Undocumented function
+     *
+     * @param string $var
+     * @return string
+     */
     public function outVar(string $var): string {
         //'/[\(\[](.*?),*[\)\]]/'
         //'/\((.*?),*\)/'
 
-        if (\substr($var,0,1) != "'" && \substr($var,0,1) != '"' && \preg_match_all('/[\(\[](.*?),*[\)\]]/', $var, $matches) !== FALSE) {
+        /*if (\substr($var, 0, 1) != "'" && \substr($var, 0, 1) != '"' && \preg_match_all('/[\(\[](.*?),*[\)\]]/', $var, $matches) !== FALSE) {
             if (!empty($matches[1])) {
                 $vv = \array_map(function ($v) {
                     return \array_map(array($this, 'castVar'), $v);
@@ -514,8 +559,8 @@ class Skeleton implements SkeletonInterface {
                 }, $matches[1]));
                 $var = str_replace($matches[1], implode(",", $vv[0]), $var);
             }
-        }
-        return (empty($var) ? "" : "<?php echo " . $this->castVar($var) . " ;?>");
+        }*/
+        return (empty($var) ? "" : "<?php echo " . $this->cast($var) . " ;?>");
     }
     /****************************************************************** */
     public function generateOutputFilename(string $template): string{
