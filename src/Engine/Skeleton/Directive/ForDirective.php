@@ -1,4 +1,4 @@
-<?php declare(strict_types=1);
+<?php declare (strict_types = 1);
 /*! Copyright (c) 2018 GraalPHP
 https://github.com/graalphp
 
@@ -27,53 +27,53 @@ OTHER DEALINGS IN THE SOFTWARE. */
 namespace Graal\Bone\Engine\Skeleton\Directive;
 
 use Graal\Bone\Engine\Skeleton\Directive;
-use Graal\Bone\Node\HtmlNode;
 use Graal\Bone\Engine\Skeleton\SkeletonInterface;
+use Graal\Bone\Node\HtmlNode;
 
-class ForDirective extends Directive{
+class ForDirective extends Directive {
 
     /*public static function deleteAttributes(){
-        return true ;
+    return true ;
     }*/
-    
+
     /*public static function deleteOptionalAttributes(){
-        return true ;
+    return true ;
     }*/
 
     public static function getOptionalAttributes(): array{
         return array(
             "in",
-            "as"
+            "as",
         );
     }
 
-    public static function getAttributes():array{
+    public static function getAttributes(): array{
         return array(
-            "for"
+            "for",
         );
     }
-    public static function transpile(array $attributes, array $optional, HtmlNode $node,SkeletonInterface $skeleton):string{
+    public static function transpile(array $attributes, array $optional, HtmlNode $node, SkeletonInterface $skeleton): string{
         $regex = '/\(\s*(.*?)\s*;\s*(.*?)\s*;\s*(.*?)\s*\)/';
-        $content = $node->getInnerText() ;
-        if(isset($optional['in']) || isset($optional['as'])){
+        $content = $node->getInnerText();
+        if (isset($optional['in']) || isset($optional['as'])) {
             $part1 = $skeleton->castVar($attributes['for']);
-            if(isset($optional['as'])){
-                $part2 = \implode(" => ",\array_map(array($skeleton,'castVar'),\explode(',',$optional['as'])));
-            }else{
-                $part2 = $part1 ;
+            if (isset($optional['as'])) {
+                $part2 = \implode(" => ", \array_map(array($skeleton, 'castVar'), \explode(',', $optional['as'])));
+            } else {
+                $part2 = $part1;
                 $part1 = $skeleton->castVar($optional['in']);
             }
-            $statement = \sprintf("foreach(%s as %s)",$part1,$part2);
+            $statement = \sprintf("foreach(%s as %s)", $part1, $part2);
             //\var_dump($statement);
-        }else{
-            \preg_match_all($regex,$attributes['for'],$matches);
-            for($i=1;$i<4;$i++){
-                $attributes['for'] = (\str_replace($matches[$i],\array_map(array($skeleton,'castExp'),$matches[$i]),$attributes['for']));
+        } else {
+            \preg_match_all($regex, $attributes['for'], $matches);
+            for ($i = 1; $i < 4; $i++) {
+                $attributes['for'] = (\str_replace($matches[$i], \array_map(array($skeleton, 'castExp'), $matches[$i]), $attributes['for']));
             }
-            $statement = "for".$attributes['for'];
+            $statement = "for" . $attributes['for'];
             //\var_dump($statement);
         }
         $code = "<?php $statement { ?> $content <?php } ?>";
-        return  $code ;
+        return $code;
     }
 }

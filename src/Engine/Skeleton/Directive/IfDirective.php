@@ -46,10 +46,13 @@ class IfDirective extends Directive{
 
     public static function getAttributes():array{
         return array(
-            "if"
+            'if'
         );
     }
     public static function transpile(array $attributes, array $optional, HtmlNode $node,SkeletonInterface $skeleton):string{
-                   
+        $inner = $node->getInnerText();
+        $condition = trim($skeleton->cast($attributes['if']));
+        $statement = "<?php if".(\strpos($condition,'(') === FALSE ? "($condition)" : $condition)."{ ?> $inner <?php } %s ?>" ;
+        
     }
 }

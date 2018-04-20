@@ -92,9 +92,9 @@ class Skeleton implements SkeletonInterface {
             $path = "*[$mandatory_path$optional_path]";
 
             foreach ($parser->query($path) as $node) {
-
-                $attrs = array_intersect_key($node->attributes, array_fill_keys($mandatory, ""));
-                $op = array_intersect_key($node->attributes, array_fill_keys($optional, ""));
+                
+                $attrs = array_intersect_key(\array_change_key_case($node->attributes), array_fill_keys($mandatory, ""));
+                $op = array_intersect_key(\array_change_key_case($node->attributes), array_fill_keys($optional, ""));
                 $traspiled = $directive::transpile($attrs, $op, $node, $this);
 
                 if (\in_array($node->getTag(), $this->exclusiveTags)) {
@@ -497,7 +497,17 @@ class Skeleton implements SkeletonInterface {
         if (!$this->isVarToCast($var)) {
             return $var;
         }
-        if (\preg_match_all('/(\w+(\.*\w*)*)([\(\[](.*?),*[\)\]])*/', $var, $matches) !== FALSE) {
+        //(\w+(\.\w+)*\s*)?([\(\[](.*?),*[\)\]])?
+        //(\w+(\.*\w*)*)([\(\[](.*?),*[\)\]])* <-- OLD
+
+        //((['"]?\w+['"]?\.?)+) NEW !!!!
+        $var = \preg_replace_callback('/(([\'\"]?\w+[\'\"]?\.?)+)/',function($matches){
+            //\var_dump($matches);
+            return $this->castVar($matches[1]);
+        },$var);
+
+        /*if (\preg_match_all('', $var, $matches) !== FALSE) {
+            \var_dump($matches);
             $casting = array_map(array($this, 'castVar'), $matches[1]);
             $vv = \array_map(function ($v) {
                 return \array_map(array($this, 'castVar'), $v);
@@ -507,8 +517,8 @@ class Skeleton implements SkeletonInterface {
             $var = \str_replace($matches[1], $casting, str_replace($matches[4], array_map(function ($v) {
                 return implode(",", $v);
             }, $vv), $var));
-        }
-        var_dump($var);
+        }*/
+       // var_dump($var);
         return $var;
     }
 
@@ -522,11 +532,11 @@ class Skeleton implements SkeletonInterface {
         return (
             !$this->options['VAR_STYLE_PHP'] &&
             !\is_numeric($var) &&
-            !\substr($var, 0, 1) == "'" &&
-            !\substr($var, 0, 1) == '"' &&
-            !\substr($var, 0, 1) == '$' &&
-            !\strtolower($var) == 'true' &&
-            !\strtolower($var) == 'false' &&
+            \substr($var, 0, 1) != "'" &&
+            \substr($var, 0, 1) != '"' &&
+            \substr($var, 0, 1) != '$' &&
+            \strtolower($var) != 'true' &&
+            \strtolower($var) != 'false' &&
             !empty($var)
         );
     }
