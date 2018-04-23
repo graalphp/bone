@@ -26,10 +26,11 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE. */
 
 namespace Graal\Bone\Engine;
-use Graal\Bone\Engine\Skeleton\Directive\ForDirective;
+use Graal\Bone\Parser\Html5;
 use Graal\Bone\Engine\Skeleton\SkeletonException;
 use Graal\Bone\Engine\SKeleton\SkeletonInterface;
-use Graal\Bone\Parser\Html5;
+use Graal\Bone\Engine\Skeleton\Directive\IfDirective;
+use Graal\Bone\Engine\Skeleton\Directive\ForDirective;
 
 class Skeleton implements SkeletonInterface {
 
@@ -51,6 +52,7 @@ class Skeleton implements SkeletonInterface {
     ];
     protected $directives = [
         ForDirective::class,
+        IfDirective::class,
     ];
     protected $options = [
         'DIR_SEPARATOR' => '$',
@@ -91,7 +93,7 @@ class Skeleton implements SkeletonInterface {
             $optional_path = empty($optional) ? "" : "+$mandatory_path," . implode(",", $optional);
             $path = "*[$mandatory_path$optional_path]";
 
-            foreach ($parser->query($path) as $node) {
+            foreach (\array_reverse($parser->query($path)) as $node) {
                 
                 $attrs = array_intersect_key(\array_change_key_case($node->attributes), array_fill_keys($mandatory, ""));
                 $op = array_intersect_key(\array_change_key_case($node->attributes), array_fill_keys($optional, ""));

@@ -34,5 +34,5 @@ interface DirectiveInterface {
     public static function deleteOptionalAttributes();
     public static function getAttributes(): array;
     public static function getOptionalAttributes(): array;
-    public static function transpile(array $attributes, array $optional, HtmlNode $node, SkeletonInterface $skeleton):string;
+    public static function transpile(array $attributes, array $optional, HtmlNode &$node, SkeletonInterface $skeleton):string;
 }

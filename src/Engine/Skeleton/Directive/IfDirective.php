@@ -49,10 +49,19 @@ class IfDirective extends Directive{
             'if'
         );
     }
-    public static function transpile(array $attributes, array $optional, HtmlNode $node,SkeletonInterface $skeleton):string{
+    public static function transpile(array $attributes, array $optional, HtmlNode &$node,SkeletonInterface $skeleton):string{
         $inner = $node->getInnerText();
         $condition = trim($skeleton->cast($attributes['if']));
-        $statement = "<?php if".(\strpos($condition,'(') === FALSE ? "($condition)" : $condition)."{ ?> $inner <?php } %s ?>" ;
-        
+        $statement = "<?php if ($condition) { ?> $inner <?php } %s ?>" ;
+        $else = $node->query('else',0);
+        $else_statement = "" ;
+        $else_outer = "" ;
+        if($else){
+            $else_inner = $else->getInnerText();
+            $else_statement = "else { ?> $else_inner <?php } ";
+            $else_outer = $else->getOuterText();
+        }
+        $statement = str_replace($else_outer,"",\sprintf($statement,$else_statement));
+        return $statement ;
     }
 }

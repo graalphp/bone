@@ -1,16 +1,15 @@
-<div if="morning">
+<div if="(morning) && morning">
     goodmorning !
-    <else>
+    <else if="morning === 1">
         goodnight !
-    </else>
-
-    <else>
-
+        <else>
+           <b>good life !</b>
+        </else>
     </else>
     
 </div>
 
 <bone if="true">
     ciao
-    <bone else>addio</bone>
+    
 </bone>

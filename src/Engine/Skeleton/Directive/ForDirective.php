@@ -52,7 +52,7 @@ class ForDirective extends Directive {
             "for",
         );
     }
-    public static function transpile(array $attributes, array $optional, HtmlNode $node, SkeletonInterface $skeleton): string{
+    public static function transpile(array $attributes, array $optional, HtmlNode &$node, SkeletonInterface $skeleton): string{
         $regex = '/\(\s*(.*?)\s*;\s*(.*?)\s*;\s*(.*?)\s*\)/';
         $content = $node->getInnerText();
         if (isset($optional['in']) || isset($optional['as'])) {

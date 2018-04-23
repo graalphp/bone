@@ -113,6 +113,13 @@
 </ul> 
 --></code></pre>
             <h1 class="mt-3">#if</h1>
+            <pre><code class="language-markup"><!--<div if="morning"> 
+    <span>GoodMornig !</span>
+    <else>
+        <span>GoodNight !</span>
+    </else>
+</div>
+--></code></pre>
         </div>
     </main>
     <!-- /.container -->

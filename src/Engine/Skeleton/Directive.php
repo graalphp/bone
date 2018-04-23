@@ -41,5 +41,5 @@ abstract class Directive implements DirectiveInterface{
         return [];
     }
     public abstract static function getAttributes():array;
-    public abstract static function transpile(array $attributes, array $optional, HtmlNode $node, SkeletonInterface $skeleton):string;
+    public abstract static function transpile(array $attributes, array $optional, HtmlNode &$node, SkeletonInterface $skeleton):string;
 }

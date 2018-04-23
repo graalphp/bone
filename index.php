@@ -11,11 +11,9 @@ $skeleton
 
 $skeleton->setOutputPrefix('compiled');
 $skeleton->setOutputSuffix('test');
-$content = $skeleton->render("other",['md5'=>'md5','email' => 'test@email.com']);
-//echo $content ;
+$content = $skeleton->render("main",["morning"=>true]);
+echo $content ;
 
-$c = strpos($skeleton->cast("abc == abc"),'(');
-var_dump($c);
 /*$template = 'partial/common/main' ;
 $out = $skeleton->generateOutputFilename($template);
 var_dump($out);
