@@ -1,15 +1,3 @@
-#!/usr/local/bin/php
-<?php
-    $command = $argv[1] ;
-    switch($command){
-        case "--create-directive":
-            $className = ucfirst($argv[2]);
-            if(empty($className)){
-                print "Empty class name" ;
-                return 1 ;
-            }
-            $path = "src/Engine/Skeleton/Directive/$className.php" ;
-            $content = <<<EOT
 <?php declare(strict_types=1);
 /*! Copyright (c) 2018 GraalPHP
 https://github.com/graalphp
@@ -42,7 +30,7 @@ use Graal\Bone\Engine\Skeleton\Directive;
 use Graal\Bone\Node\HtmlNode;
 use Graal\Bone\Engine\Skeleton\SkeletonInterface;
 
-class $className extends Directive{
+class SwitchDirective extends Directive{
 
     /*public static function deleteAttributes(){
         return true ;
@@ -58,16 +46,35 @@ class $className extends Directive{
 
     public static function getAttributes():array{
         return array(
-            # attrs...
+            'switch'
         );
     }
-    public static function transpile(array \$attributes, array \$optional, HtmlNode &\$node,SkeletonInterface \$skeleton):string{
-        # code...           
+    public static function transpile(array $attributes, array $optional, HtmlNode &$node,SkeletonInterface $skeleton):string{
+        $inner = $node->getInnerText();
+        $condition = trim($skeleton->cast($attributes['switch']));
+        $statement = "<?php switch($condition) { %s } ?>" ;
+        $case_statement = "" ;
+        $cases = $node->query('case');
+        $placeholder = \count($cases);
+        foreach ($cases as $case) {
+            $outer_case = $case->getOuterText();
+            $inner = $placeholder > 0 && $placeholder !== false ? \str_replace($outer_case,'$$$placeholder$$$',$inner) : \str_replace($outer_case,"",$inner);
+            $inner_case = $case->getInnerText();
+            $value = $case->getAttribute('value');
+            $case_statement .= "\ncase $value: ?> $inner_case <?php ;" ;
+            if($case->getAttribute('break')){
+                $case_statement .= "break;";
+            }
+            $placeholder = false ;
+        }  
+        $default = $node->query('default',0);
+        if($default){
+            $outer_default = $default->getOuterText();
+            $inner = $placeholder === 0 ? \str_replace($outer_default,'$$$placeholder$$$',$inner) : \str_replace($outer_default,"",$inner);
+            $inner_default = $default->getInnerText();
+            $case_statement .= "\ndefault : ?> $inner_default <?php ;";
+        }         
+        $statement = \str_replace('$$$placeholder$$$',\sprintf($statement,$case_statement),$inner);
+        return $statement;
     }
 }
-EOT;
-        file_put_contents($path,$content);
-        break;
-    }
-    return 0 ;
-?>

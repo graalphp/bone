@@ -1,15 +1,14 @@
-<div if="(morning) && morning">
-    goodmorning !
-    <else if="morning === 1">
-        goodnight !
-        <else>
-           <b>good life !</b>
-        </else>
-    </else>
-    
+<div>
+    <ul if="condition" for="i" in="myArray">
+        <li switch="myVar">
+            <span class="li">
+            <case value="1" break>{{ i }}</case>
+            <case value="2" break>{{ i*2 }}</case>
+            </span>
+        </li>
+    </ul>
 </div>
 
-<bone if="true">
-    ciao
+<div include="hello" params="['test'=>'other']">
     
-</bone>
+</div>

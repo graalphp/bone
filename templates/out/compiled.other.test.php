@@ -1,15 +1,16 @@
-<div><?php if (($morning) && $morning) { ?> 
-    goodmorning !
-    
-    
- <?php } else { ?> <?php if ($morning === 1) { ?> 
-        goodnight !
-        
-     <?php } else { ?> 
-           <b>good life !</b>
-         <?php }  ?> <?php }  ?></div>
+<div>
+    <ul><?php if ($condition) { ?> <?php foreach($myArray as $i) { ?> 
+        <li>
+            <span class="li">
+            <?php switch($myVar) { 
+case 1: ?> <?php echo $i ;?> <?php ;break;
+case 2: ?> <?php echo $i*2 ;?> <?php ;break; } ?>
+            
+            </span>
+        </li>
+     <?php } ?> <?php }  ?></ul>
+</div>
 
-<?php if (true) { ?> 
-    ciao
+<div include="hello" params="['test'=>'other']">
     
- <?php }  ?>
+</div>

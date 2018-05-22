@@ -31,6 +31,7 @@ use Graal\Bone\Engine\Skeleton\SkeletonException;
 use Graal\Bone\Engine\SKeleton\SkeletonInterface;
 use Graal\Bone\Engine\Skeleton\Directive\IfDirective;
 use Graal\Bone\Engine\Skeleton\Directive\ForDirective;
+use Graal\Bone\Engine\Skeleton\Directive\SwitchDirective;
 
 class Skeleton implements SkeletonInterface {
 
@@ -53,6 +54,7 @@ class Skeleton implements SkeletonInterface {
     protected $directives = [
         ForDirective::class,
         IfDirective::class,
+        SwitchDirective::class,
     ];
     protected $options = [
         'DIR_SEPARATOR' => '$',
