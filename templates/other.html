@@ -2,13 +2,14 @@
     <ul if="condition" for="i" in="myArray">
         <li switch="myVar">
             <span class="li">
-            <case value="1" break>{{ i }}</case>
-            <case value="2" break>{{ i*2 }}</case>
+            <case value="1" break>g</case>
+            <case value="2" break>{{ escape(str_replace("ciao","onload=alert()",i)) }}</case>
             </span>
         </li>
     </ul>
 </div>
 
-<div include="hello" params="['test'=>'other']">
+<div> hello {{ name }}</div>
+<div include="hello" params="{'name':name.gf['fdf'],'gfg':78,'dsd':true}">
     
 </div>

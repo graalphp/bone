@@ -53,6 +53,21 @@ class IncludeDirective extends Directive{
     }
     public static function transpile(array $attributes, array $optional, HtmlNode &$node,SkeletonInterface $skeleton):string{
        $template = $attributes['include'];
-       $params = $optional['params'] ? $optional['params'] : [] ;         
+       var_dump($optional['params']);
+       //$params = isset($optional['params']) && ($param = json_decode(str_replace("'","\"",$optional['params']),true)) ? $param : [] ;
+       // :\s*(?!'|")((\w*\.?\[?[\'\"]?\w[\'\"]?\]?)+)
+       if(isset($optional['params'])){
+        $optional['params'] = \preg_replace_callback('/:\s*(?!\'|\")((\w*\.?\[?[\'\"]?\w[\'\"]?\]?)+)/',function($matches){
+            var_dump($matches[1]);
+            return (is_numeric($matches[1])) ? ":$matches[1]" : ":'$matches[1]'";
+        },$optional['params']);
+        }
+      /* foreach ($params as $key => $value) {
+           if(\array_key_exists($value,$skeleton->extracted_params)){
+                $params[$key] = $skeleton->extracted_params[$value] ;
+           }
+       }*/
+       var_dump($optional['params']);
+       return $skeleton->render($template,$params);;         
     }
 }

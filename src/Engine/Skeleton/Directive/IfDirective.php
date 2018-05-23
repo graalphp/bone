@@ -52,7 +52,7 @@ class IfDirective extends Directive{
     public static function transpile(array $attributes, array $optional, HtmlNode &$node,SkeletonInterface $skeleton):string{
         $inner = $node->getInnerText();
         $condition = trim($skeleton->cast($attributes['if']));
-        $statement = "<?php if ($condition) { ?> $inner <?php } %s ?>" ;
+        $statement = "<?php if ($condition) { ?> $inner <?php } %%%placeholder%%% ?>" ;
         $else = $node->query('else',0);
         $else_statement = "" ;
         $else_outer = "" ;
@@ -61,7 +61,7 @@ class IfDirective extends Directive{
             $else_statement = "else { ?> $else_inner <?php } ";
             $else_outer = $else->getOuterText();
         }
-        $statement = str_replace($else_outer,"",\sprintf($statement,$else_statement));
+        $statement = \str_replace($else_outer,"",\str_replace("%%%placeholder%%%",$else_statement,$statement));
         return $statement ;
     }
 }

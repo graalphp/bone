@@ -32,11 +32,14 @@ use Graal\Bone\Engine\SKeleton\SkeletonInterface;
 use Graal\Bone\Engine\Skeleton\Directive\IfDirective;
 use Graal\Bone\Engine\Skeleton\Directive\ForDirective;
 use Graal\Bone\Engine\Skeleton\Directive\SwitchDirective;
+use Graal\Bone\Engine\Skeleton\Directive\IncludeDirective;
 
 class Skeleton implements SkeletonInterface {
 
     protected $escapeVarSymbol = "#";
+    protected $escapeExpSymbol = "#";
     protected $regexVar = '/#?{{\s*(.*?)\s*}}/';
+    protected $regexExp = '/#?{%\s*(.*?)\s*%}/';
     protected $basePath;
     protected $templateDir;
     protected $outputDir;
@@ -45,16 +48,21 @@ class Skeleton implements SkeletonInterface {
     protected $templateFullPath;
     protected $outputFullPath;
     protected $expiresOutputFilename = 60 * 60;
+    protected $renderStarted = false ;
+
     protected $globals = [
 
     ];
-    protected $functions = [
+    public $extracted_params = [] ;
 
+    protected $functions = [
+        'str_replace'=>'str_replace'
     ];
     protected $directives = [
         ForDirective::class,
         IfDirective::class,
         SwitchDirective::class,
+        IncludeDirective::class,
     ];
     protected $options = [
         'DIR_SEPARATOR' => '$',
@@ -78,7 +86,9 @@ class Skeleton implements SkeletonInterface {
      *
      */
     public function __construct() {
-
+        $this->functions['escape'] = function($v){
+            return htmlspecialchars($v, ENT_QUOTES);
+        };
     }
 
     /**
@@ -126,6 +136,7 @@ class Skeleton implements SkeletonInterface {
         # return the content
         return $this->transpileVar($parser->getContent());
     }
+
     /**
      * Undocumented function
      *
@@ -136,6 +147,9 @@ class Skeleton implements SkeletonInterface {
         if (\preg_match_all($this->regexVar, $template, $matches) !== FALSE) {
             $this->escapeVar($matches);
             $template = \str_replace($matches[0], \array_map(array($this, 'outVar'), $matches[1]), $template);
+        }
+        if (\preg_match_all($this->regexExp, $template, $matches) !== FALSE) {
+            $template = \str_replace($matches[0], \array_map(array($this, 'outExp'), $matches[1]), $template);
         }
         return $template;
     }
@@ -155,7 +169,10 @@ class Skeleton implements SkeletonInterface {
      * @return void
      */
     public function start() {
-        \ob_start();
+        if(!$this->renderStarted){
+            $this->renderStarted = true ;
+            @ob_start();
+        }
     }
 
     /**
@@ -164,7 +181,12 @@ class Skeleton implements SkeletonInterface {
      * @return void
      */
     public function end() {
-        \ob_end_flush();
+        if($this->renderStarted){
+            $this->renderStarted = false ;
+            if(\ob_get_length()){
+                \ob_end_flush();
+            }
+        }
     }
     /**
      *
@@ -173,7 +195,10 @@ class Skeleton implements SkeletonInterface {
         if (($filename = $this->templateExists($template)) === false) {
             throw new SkeletonException("The template \"$template\" file does not exist", 1);
         }
-
+        foreach ($params as $key => $value) {
+            $this->extracted_params[$key] = $value ;
+        }
+        
         /* TODO LIST */
         # check for cached template     |
         # OR
@@ -192,7 +217,9 @@ class Skeleton implements SkeletonInterface {
         }
         # extract globals params        | > function extractCommon();
         # extract functions             |
-
+        if (!empty($this->functions)) {
+            \extract($this->functions);
+        }
         # include output file           |
         # get content of output file    |> function getCompiledTemplateContent();
         include $outputPath;
@@ -476,21 +503,7 @@ class Skeleton implements SkeletonInterface {
         $this->options['CACHE_ENABLED'] = $enable;
         $this->options['GENERATE_EXPIRE_OUT_DATE'] |= $enable;
     }
-    /**
-     * Undocumented function
-     *
-     * @param string $exp
-     * @return string
-     */
-    //@deprecated version
-    public function castExp(string $exp): string {
-        if (!$this->options['VAR_STYLE_PHP']) {
-            if (\preg_match_all('/\s*([^=+\-\*\/%<>;0-9\s]+)\s*/', $exp, $matches) !== FALSE) {
-                return \str_replace($matches[0], \array_map(array($this, 'castVar'), $matches[1]), $exp);
-            }
-        }
-        return $exp;
-    }
+    
     /**
      * Undocumented function
      *
@@ -501,28 +514,11 @@ class Skeleton implements SkeletonInterface {
         if (!$this->isVarToCast($var)) {
             return $var;
         }
-        //(\w+(\.\w+)*\s*)?([\(\[](.*?),*[\)\]])?
-        //(\w+(\.*\w*)*)([\(\[](.*?),*[\)\]])* <-- OLD
-
-        //((['"]?\w+['"]?\.?)+) NEW !!!!
-        $var = \preg_replace_callback('/(([\'\"]?\w+[\'\"]?\.?)+)/',function($matches){
-            //\var_dump($matches);
+        // /(([\'\"]?\w+[\'\"]?\.?)+)/ OLD
+        // /((([\"\'].*?[\"\'])|(\w+)\.?)+)/ NEW !!
+        $var = \preg_replace_callback('/((([\"\'].*?[\"\'])|(\w+)\.?)+)/',function($matches){
             return $this->castVar($matches[1]);
         },$var);
-
-        /*if (\preg_match_all('', $var, $matches) !== FALSE) {
-            \var_dump($matches);
-            $casting = array_map(array($this, 'castVar'), $matches[1]);
-            $vv = \array_map(function ($v) {
-                return \array_map(array($this, 'castVar'), $v);
-            }, \array_map(function ($v) {
-                return \array_map('trim', \explode(',', $v));
-            }, $matches[4]));
-            $var = \str_replace($matches[1], $casting, str_replace($matches[4], array_map(function ($v) {
-                return implode(",", $v);
-            }, $vv), $var));
-        }*/
-       // var_dump($var);
         return $var;
     }
 
@@ -553,7 +549,6 @@ class Skeleton implements SkeletonInterface {
     public function castVar(string $var): string {
         return ($this->isVarToCast($var) ? \str_replace('.', '->', "$$var") : $var);
     }
-
     /**
      * Undocumented function
      *
@@ -561,21 +556,13 @@ class Skeleton implements SkeletonInterface {
      * @return string
      */
     public function outVar(string $var): string {
-        //'/[\(\[](.*?),*[\)\]]/'
-        //'/\((.*?),*\)/'
-
-        /*if (\substr($var, 0, 1) != "'" && \substr($var, 0, 1) != '"' && \preg_match_all('/[\(\[](.*?),*[\)\]]/', $var, $matches) !== FALSE) {
-            if (!empty($matches[1])) {
-                $vv = \array_map(function ($v) {
-                    return \array_map(array($this, 'castVar'), $v);
-                }, \array_map(function ($v) {
-                    return \array_map('trim', \explode(',', $v));
-                }, $matches[1]));
-                $var = str_replace($matches[1], implode(",", $vv[0]), $var);
-            }
-        }*/
         return (empty($var) ? "" : "<?php echo " . $this->cast($var) . " ;?>");
     }
+
+    public function outExp(string $exp): string {
+        return (empty($exp) ? "" : "<?php " . $this->cast($exp) . " ;?>");
+    }
+
     /****************************************************************** */
     public function generateOutputFilename(string $template): string{
         $out_date = $this->options['GENERATE_OUT_DATE'] === true ? time() . $this->options['OUTPUT_SEPARATOR'] : "";

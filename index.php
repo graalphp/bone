@@ -11,47 +11,8 @@ $skeleton
 
 $skeleton->setOutputPrefix('compiled');
 $skeleton->setOutputSuffix('test');
-$content = $skeleton->render("other",["myVar"=>2,'condition'=>true,'myArray'=>array(1,2,3)]);
-//echo $content ;
-function isFloat($value){
-    return ((int)$value != $value) ;
-  }
-function casttype($a){
-    global $skeleton ;
-    var_dump($a);
-    if(is_numeric($a)){
-       if((int)$a != $a)return((floatval($a)));
-       return intval($a);
-    }
-    switch(strtolower($a)){
-        case 'true':return true;
-        case 'false':return false;
-    }
-    if(strpos($a,'[') !== false || strpos($a,'array(') !== false){
-        return strtoarray($a);
-    }
-    return $a ;
-}
-function strtoarray($a){
-    $arr = [];
-    $a = ltrim($a, '[');
-    $a = ltrim($a, 'array(');
-    $a = rtrim($a, ']');
-    $a = rtrim($a, ')');
-    var_dump($a);
-    $tmpArr = explode(",", $a);
-    foreach ($tmpArr as $v) {
-        if(strpos($v,"=>") !== false){
-            $kv = explode("=>", $v,2);
-            $arr[str_replace(array('\'','"'),"",$kv[0])] = casttype(str_replace(array('\'','"'),"",$kv[1]));
-        }else{
-            $arr[] = casttype(str_replace(array('\'','"'),"",$v));
-        }
-        
-    }
-    return $arr;
-}
-var_dump(strtoarray("array('test'=>'hello',45,78.6,'other'=>true,'t'=>false,'op'=>array('test'=>false,'dsd'=>myVar))"));
+$content = $skeleton->render("other",["myVar"=>2,'condition'=>true,'myArray'=>array("<b>ciao</b>"),'name'=>'jo']);
+echo $content ;
 
 /*$template = 'partial/common/main' ;
 $out = $skeleton->generateOutputFilename($template);

@@ -113,6 +113,7 @@
 </ul> 
 --></code></pre>
             <h1 class="mt-3">#if</h1>
+            Use the "if" construct has never been so easy!
             <pre><code class="language-markup"><!--<div if="morning"> 
     <span>GoodMornig !</span>
     <else>
@@ -120,6 +121,19 @@
     </else>
 </div>
 --></code></pre>
+            
+            to use "else" simply use a tag, the content will be replaced automatically.
+            You can also use nested else if !
+            <pre><code class="language-markup"><!--<div if="morning"> 
+    <span>GoodMornig !</span>
+    <else if="night">
+        <span>GoodNight !</span>
+        <else>
+            <span>Hola Amigos !</span>
+        </else>
+    </else>
+</div>
+            --></code></pre>
         </div>
     </main>
     <!-- /.container -->
