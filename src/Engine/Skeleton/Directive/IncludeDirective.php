@@ -56,11 +56,19 @@ class IncludeDirective extends Directive{
        var_dump($optional['params']);
        //$params = isset($optional['params']) && ($param = json_decode(str_replace("'","\"",$optional['params']),true)) ? $param : [] ;
        // :\s*(?!'|")((\w*\.?\[?[\'\"]?\w[\'\"]?\]?)+)
+
        if(isset($optional['params'])){
-        $optional['params'] = \preg_replace_callback('/:\s*(?!\'|\")((\w*\.?\[?[\'\"]?\w[\'\"]?\]?)+)/',function($matches){
-            var_dump($matches[1]);
-            return (is_numeric($matches[1])) ? ":$matches[1]" : ":'$matches[1]'";
-        },$optional['params']);
+            $optional['params'] = \preg_replace_callback('/:\s*(?!\'|\")((\w*\.?\[?\(?[\'\"]?\w[\'\"]?\)?\]?)+)/',function($matches){
+                var_dump($matches[1]);
+                $matches[1] = \addslashes($matches[1]);
+                if(is_numeric($matches[1])){
+                    return $matches[0];
+                }
+                if(\strtolower($matches[1]) == 'true' || \strtolower($matches[1]) == 'false'){
+                    return $matches[0];
+                }
+                return ":'$matches[1]'";
+            },$optional['params']);
         }
       /* foreach ($params as $key => $value) {
            if(\array_key_exists($value,$skeleton->extracted_params)){
@@ -68,6 +76,34 @@ class IncludeDirective extends Directive{
            }
        }*/
        var_dump($optional['params']);
+       $params = (isset($optional['params']) && $params = json_decode(str_replace("'","\"",$optional['params']),true)) ? $params : [] ;
+       var_dump($params);
+       foreach ($params as $key => $value) {
+           if(\is_string($value)){
+               $obj = \explode(".",$value);
+               var_dump($obj);
+                if(\array_key_exists($obj[0],$skeleton->extracted_params)){
+                    $params[$key] = $skeleton->extracted_params[$obj[0]];
+                    $root = $skeleton->extracted_params[$obj[0]];
+                    for($i = 1 ; $i < count($obj) ; $i++) {
+                        var_dump($root);
+                        if(\strpos($obj[$i],"[") !== false){
+                            $arr = \explode("[",$obj[$i]);
+                            $aName = $arr[0];
+                            $aRef = \str_replace(array("'","\""),"", \rtrim($arr[1],']'));
+                            $root = $root->{$aName}[$aRef];
+                        }else{
+                            $root = $root->{$obj[$i]};
+                        }
+                        $params[$key] = $root;
+                        
+                    }
+                }
+           }
+           
+       }
+       var_dump($params);
+       var_dump($skeleton->extracted_params);
        return $skeleton->render($template,$params);;         
     }
 }

@@ -3,6 +3,12 @@ require "vendor/autoload.php";
 use Graal\Bone\Engine\Skeleton;
 use Graal\Bone\Parser\Html5;
 
+$obj = new stdClass();
+$obj->x = new stdClass() ;
+$obj->x->y = ['eureka'];
+$obj->x->z = function(){ return 'yeah' ;};
+$obj->arr = ['x'=>'array x'];
+
 $skeleton = new Skeleton();
 $skeleton
     ->setBasePath(__DIR__)
@@ -11,7 +17,8 @@ $skeleton
 
 $skeleton->setOutputPrefix('compiled');
 $skeleton->setOutputSuffix('test');
-$content = $skeleton->render("other",["myVar"=>2,'condition'=>true,'myArray'=>array("<b>ciao</b>"),'name'=>'jo']);
+$content = $skeleton->render("other",
+["myVar"=>2,'condition'=>true,'myArray'=>array("<b>ciao</b>"),'obj'=>$obj,'name'=>'jo']);
 echo $content ;
 
 /*$template = 'partial/common/main' ;

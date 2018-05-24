@@ -55,8 +55,8 @@ class Skeleton implements SkeletonInterface {
     ];
     public $extracted_params = [] ;
 
-    protected $functions = [
-        'str_replace'=>'str_replace'
+    public  $functions = [
+        
     ];
     protected $directives = [
         ForDirective::class,
@@ -86,9 +86,9 @@ class Skeleton implements SkeletonInterface {
      *
      */
     public function __construct() {
-        $this->functions['escape'] = function($v){
-            return htmlspecialchars($v, ENT_QUOTES);
-        };
+       $this->functions['escape'] = function($v){
+           return \htmlentities($v,ENT_QUOTES);
+       };
     }
 
     /**

@@ -1,4 +1,4 @@
 <div>
-    hello <?php echo $name ;?>
+    hello <?php echo $name() ;?>
 </div>
 
